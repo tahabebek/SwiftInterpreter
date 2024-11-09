@@ -17,7 +17,7 @@ class Lexer {
 
   func nextToken(log: Bool = true) -> Token {
     let token: Token
-    defer { if log { print("Token: \(String(describing: token))") } }
+    // defer { if log { print("Token: \(String(describing: token))") } }
     readChar()
     guard let currentChar else {
       token = .eof
@@ -36,10 +36,11 @@ class Lexer {
     case "_": token = .underscore
     case "-": token = readDash()
     case ".": token = readDot()
+    case "!": token = readBang()
     case " ", "\n":
       token = nextToken(log: false)
     default:
-      if let operatorIdentifier = Token.operators[currentChar] {
+      if let operatorIdentifier = Token.operators[String(currentChar)] {
         token = operatorIdentifier
       } else if currentChar.isLetter {
         let identifier = readIdentifier()
@@ -59,25 +60,40 @@ class Lexer {
     return token
   }
 
+  private func peekChar() -> Character? {
+    guard readPosition < input.count else { return nil }
+    return input[readPosition]
+  }
+
+  private func readBang() -> Token {
+    guard let nextChar = peekChar() else { return .operator(.bang) }
+    switch nextChar {
+    case " ", "\n":
+      return .operator(.bang)
+    case "=":
+      readChar()
+      return .operator(.notEqual)
+    default:
+      return .illegal
+    }
+  }
   private func readDot() -> Token {
-    // .
-    switch input[readPosition] {
+    //.
+    guard let nextChar = peekChar() else { return .illegal }
+    switch nextChar {
     case ".":
       readChar()
       //..
-      switch input[readPosition] {
-      case ".":
-        readChar()
-        // ...
-        return .inclusiveRange
+      guard let nextChar = peekChar() else { return .inclusiveRange }
+      switch nextChar {
       case "<":
         readChar()
         // ..<
-        return .closedRange
+        return .nonInclusiveRange
       case " ":
         readChar()
         // ..
-        return .openRange
+        return .inclusiveRange
       default:
         return .illegal
       }
@@ -87,7 +103,8 @@ class Lexer {
   }
 
   private func readEqual() -> Token {
-    switch input[readPosition] {
+    guard let nextChar = peekChar() else { return .illegal }
+    switch nextChar {
     case " ":
       return .assign
     case "=":
@@ -99,12 +116,13 @@ class Lexer {
   }
 
   private func readDash() -> Token {
-    switch input[readPosition] {
+    guard let nextChar = peekChar() else { return .illegal }
+    switch nextChar {
     case " ":
       return .operator(.minus)
     case ">":
       readChar()
-      return .arrow
+      return .keyword(.arrow)
     case _ where input[readPosition].isNumber:
       return .integer("-\(readNumber())")
     default:

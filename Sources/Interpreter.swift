@@ -7,8 +7,12 @@
 import ArgumentParser
 
 @main
-struct Interpreter: ParsableCommand {
-    mutating func run() throws {
-        print("Hello, world!")
+struct Interpreter {
+    static func main() {
+        print("Welcome to the Lexer REPL!")
+        print("Type 'exit' to quit")
+        print("Enter your code:")
+        
+        Repl.start()
     }
 }

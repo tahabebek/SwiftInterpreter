@@ -6,10 +6,13 @@
 //
 
 enum Token: Equatable {
-  case illegal
-  case eof
   case identifier(String)
   case integer(String)
+  case keyword(Keyword)
+  case `operator`(Operator)
+  case `type`(`Type`)
+  case illegal
+  case eof
   case assign
   case comma
   case semicolon
@@ -17,35 +20,18 @@ enum Token: Equatable {
   case closingParen
   case openingBrace
   case closingBrace
-  case function
   case colon
-  case `let`
-  case `if`
-  case `else`
-  case `return`
-  case `true`
-  case `false`
-  case `null`
-  case `while`
-  case `for`
-  case `break`
-  case `continue`
-  case `struct`
-  case type(String)
-  case `operator`(Operator)
-  case arrow
   case underscore
-  case closedRange
-  case openRange
+  case nonInclusiveRange
   case inclusiveRange
-  case `in`
 
   var rawValue: String {
     switch self {
     case .identifier(let identifier): return "identifier(\(identifier))"
     case .integer(let integer): return "integer(\(integer))"
-    case .type(let type): return "type(\(type))"
     case .operator(let identifier): return "operator(\(identifier))"
+    case .keyword(let keyword): return "keyword(\(keyword.rawValue))"
+    case .type(let type): return "type(\(type.rawValue))"
     case .illegal:
       return "illegal"
     case .eof:
@@ -64,46 +50,14 @@ enum Token: Equatable {
       return "openingBrace"
     case .closingBrace:
       return "closingBrace"
-    case .function:
-      return "function"
     case .colon:
       return "colon"
-    case .let:
-      return "let"
-    case .if:
-      return "if"
-    case .else:
-      return "else"
-    case .return:
-      return "return"
-    case .true:
-      return "true"
-    case .false:
-      return "false"
-    case .null:
-      return "null"
-    case .while:
-      return "while"
-    case .for:
-      return "for"
-    case .break:
-      return "break"
-    case .continue:
-      return "continue"
-    case .struct:
-      return "struct"
-    case .arrow:
-      return "arrow"
     case .underscore:
       return "underscore"
-    case .closedRange:
-      return "closedRange"
-    case .openRange:
-      return "openRange"
+    case .nonInclusiveRange:
+      return "nonInclusiveRange"
     case .inclusiveRange:
       return "inclusiveRange"
-    case .in:
-      return "in"
     }
   }
 
@@ -111,29 +65,49 @@ enum Token: Equatable {
     switch self {
     case .identifier(let identifier): return identifier
     case .integer(let integer): return integer
-    case .type(let type): return type
     case .operator(let identifier): return identifier.rawValue
+    case .keyword(let keyword): return keyword.rawValue
+    case .type(let type): return type.rawValue
     default: return ""
     }
   }
 
+  enum Keyword: String {
+    case `func`
+    case `let`
+    case `if`
+    case `else`
+    case `return`
+    case `true`
+    case `false`
+    case `nil`
+    case `while`
+    case `for`
+    case `break`
+    case `continue`
+    case `struct`
+    case arrow
+    case `in`
+  }
+
   static var keywords: [String: Token] {
     [
-      "func": .function,
-      "let": .let,
-      "if": .if,
-      "else": .else,
-      "return": .return,
-      "true": .true,
-      "false": .false,
-      "null": .null,
-      "while": .while,
-      "for": .for,
-      "break": .break,
-      "continue": .continue,
-      "struct": .struct,
-      "->": .arrow,
-      "in": .in,
+      "func": .keyword(.func),
+      "let": .keyword(.let),
+      "if": .keyword(.if),
+      "else": .keyword(.else),
+      "return": .keyword(.return),
+      "true": .keyword(.true),
+      "false": .keyword(.false),
+      "null": .keyword(.nil),
+      "while": .keyword(.while),
+      "for": .keyword(.for),
+      "break": .keyword(.break),
+      "continue": .keyword(.continue),
+      "struct": .keyword(.struct),
+      "->": keyword(.arrow),
+      "in": .keyword(.in),
+      "nil": .keyword(.nil),
     ]
   }
 
@@ -145,6 +119,8 @@ enum Token: Equatable {
     case lessThan = "<"
     case greaterThan = ">"
     case equal = "=="
+    case notEqual = "!="
+    case bang = "!"
   }
 
   static var operators: [String: Token] {
@@ -156,13 +132,22 @@ enum Token: Equatable {
       "<": .operator(.lessThan),
       ">": .operator(.greaterThan),
       "==": .operator(.equal),
+      "!=": .operator(.notEqual),
+      "!": .operator(.bang),
     ]
+  }
+
+  enum `Type`: String {
+    case `Int`
+    case `String`
+    case `Bool`
   }
 
   static var types: [String: Token] {
     [
-      "Int": .type("Int"),
-      "String": .type("String"),
+      "Int": .type(.Int),
+      "String": .type(.String),
+      "Bool": .type(.Bool),
     ]
   }
 
