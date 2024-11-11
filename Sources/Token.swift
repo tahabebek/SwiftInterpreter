@@ -16,6 +16,7 @@ enum Token: Equatable {
   case assign
   case comma
   case semicolon
+  case newLine
   case openingParen
   case closingParen
   case openingBrace
@@ -42,6 +43,8 @@ enum Token: Equatable {
       return "comma"
     case .semicolon:
       return "semicolon"
+    case .newLine:
+      return "newLine"
     case .openingParen:
       return "openingParen"
     case .closingParen:
@@ -61,7 +64,7 @@ enum Token: Equatable {
     }
   }
 
-  var value: String {
+  var literal: String {
     switch self {
     case .identifier(let identifier): return identifier
     case .integer(let integer): return integer

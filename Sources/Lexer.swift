@@ -33,11 +33,12 @@ class Lexer {
     case "}": token = .closingBrace
     case ",": token = .comma
     case ":": token = .colon
+    case "\n": token = .newLine
     case "_": token = .underscore
     case "-": token = readDash()
     case ".": token = readDot()
     case "!": token = readBang()
-    case " ", "\n":
+    case " ":
       token = nextToken(log: false)
     default:
       if let operatorIdentifier = Token.operators[String(currentChar)] {
