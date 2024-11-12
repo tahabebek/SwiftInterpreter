@@ -5,77 +5,34 @@
 //  Created by Taha Bebek on 11/8/24.
 //
 
-enum Token: Equatable {
-  case identifier(String)
-  case integer(String)
-  case keyword(Keyword)
-  case `operator`(Operator)
-  case `type`(`Type`)
-  case illegal
-  case eof
-  case assign
-  case comma
-  case semicolon
-  case newLine
-  case openingParen
-  case closingParen
-  case openingBrace
-  case closingBrace
-  case colon
-  case underscore
-  case nonInclusiveRange
-  case inclusiveRange
+enum TokenType: Equatable {
+    case identifier
+    case integer
+    case keyword
+    case `operator`
+    case type
+    case illegal
+    case eof
+    case assign
+    case comma
+    case semicolon
+    case newLine
+    case openingParen
+    case closingParen
+    case openingBrace
+    case closingBrace
+    case colon
+    case underscore
+    case nonInclusiveRange
+    case inclusiveRange
+}
 
-  var rawValue: String {
-    switch self {
-    case .identifier(let identifier): return "identifier(\(identifier))"
-    case .integer(let integer): return "integer(\(integer))"
-    case .operator(let identifier): return "operator(\(identifier))"
-    case .keyword(let keyword): return "keyword(\(keyword.rawValue))"
-    case .type(let type): return "type(\(type.rawValue))"
-    case .illegal:
-      return "illegal"
-    case .eof:
-      return "eof"
-    case .assign:
-      return "assign"
-    case .comma:
-      return "comma"
-    case .semicolon:
-      return "semicolon"
-    case .newLine:
-      return "newLine"
-    case .openingParen:
-      return "openingParen"
-    case .closingParen:
-      return "closingParen"
-    case .openingBrace:
-      return "openingBrace"
-    case .closingBrace:
-      return "closingBrace"
-    case .colon:
-      return "colon"
-    case .underscore:
-      return "underscore"
-    case .nonInclusiveRange:
-      return "nonInclusiveRange"
-    case .inclusiveRange:
-      return "inclusiveRange"
-    }
-  }
+struct Token: Equatable {
+    let tokenType: TokenType
+    let literal: String
+}
 
-  var literal: String {
-    switch self {
-    case .identifier(let identifier): return identifier
-    case .integer(let integer): return integer
-    case .operator(let identifier): return identifier.rawValue
-    case .keyword(let keyword): return keyword.rawValue
-    case .type(let type): return type.rawValue
-    default: return ""
-    }
-  }
-
-  enum Keyword: String {
+enum Keyword: String, CaseIterable {
     case `func`
     case `let`
     case `if`
@@ -89,32 +46,11 @@ enum Token: Equatable {
     case `break`
     case `continue`
     case `struct`
-    case arrow
+    case arrow = "->"
     case `in`
-  }
+}
 
-  static var keywords: [String: Token] {
-    [
-      "func": .keyword(.func),
-      "let": .keyword(.let),
-      "if": .keyword(.if),
-      "else": .keyword(.else),
-      "return": .keyword(.return),
-      "true": .keyword(.true),
-      "false": .keyword(.false),
-      "null": .keyword(.nil),
-      "while": .keyword(.while),
-      "for": .keyword(.for),
-      "break": .keyword(.break),
-      "continue": .keyword(.continue),
-      "struct": .keyword(.struct),
-      "->": keyword(.arrow),
-      "in": .keyword(.in),
-      "nil": .keyword(.nil),
-    ]
-  }
-
-  enum Operator: String {
+enum Operator: String, CaseIterable {
     case plus = "+"
     case minus = "-"
     case slash = "/"
@@ -124,37 +60,30 @@ enum Token: Equatable {
     case equal = "=="
     case notEqual = "!="
     case bang = "!"
-  }
+ }
 
-  static var operators: [String: Token] {
-    [
-      "+": .operator(.plus),
-      "-": .operator(.minus),
-      "/": .operator(.slash),
-      "*": .operator(.asterisk),
-      "<": .operator(.lessThan),
-      ">": .operator(.greaterThan),
-      "==": .operator(.equal),
-      "!=": .operator(.notEqual),
-      "!": .operator(.bang),
-    ]
-  }
-
-  enum `Type`: String {
+enum `Type`: String, CaseIterable {
     case `Int`
     case `String`
     case `Bool`
   }
 
-  static var types: [String: Token] {
-    [
-      "Int": .type(.Int),
-      "String": .type(.String),
-      "Bool": .type(.Bool),
-    ]
-  }
+extension Token {
+    static let keywords: [String: Token] = Dictionary(
+        uniqueKeysWithValues: Keyword.allCases.map { keyword in
+            (keyword.rawValue, Token(tokenType: .keyword, literal: keyword.rawValue))
+        }
+    )
 
-  static func == (lhs: Token, rhs: Token) -> Bool {
-    lhs.rawValue == rhs.rawValue
-  }
+    static let operators: [String: Token] = Dictionary(
+        uniqueKeysWithValues: Operator.allCases.map { `operator` in
+            (`operator`.rawValue, Token(tokenType: .operator, literal: `operator`.rawValue))
+        }
+    )
+
+    static let types: [String: Token] = Dictionary(
+        uniqueKeysWithValues: Type.allCases.map { `type` in
+            (`type`.rawValue, Token(tokenType: .type, literal: `type`.rawValue))
+        }
+    )
 }

@@ -17,12 +17,8 @@ struct Parser {
 
     mutating func parseProgram() -> Program {
         var program = Program()
-        while({ () -> Bool in
-            switch currentToken {
-            case .eof: return false
-            default: return true
-            }
-        })() {
+        
+        while !currentTokenIs(token: .eof) {
             if let statement = parseStatement() {
                 program.addStatement(statement)
             }
@@ -32,43 +28,35 @@ struct Parser {
     }
 
     mutating func parseStatement() -> Statement? {
-        switch currentToken {
-        case .keyword(.let):
+        switch currentToken.tokenType {
+        case .keyword:
             return parseLetStatement()
         default:
             return nil
         }
     }
 
-    func currentTokenIs(token: Token) -> Bool {
-        return currentToken == token
+    func currentTokenIs(token: TokenType) -> Bool {
+        return currentToken.tokenType == token
     }
 
-    func peekTokenIs(token: Token) -> Bool {
-        return peekToken == token
+    func peekTokenIs(token: TokenType) -> Bool {
+        return peekToken.tokenType == token
     }
 
     mutating func parseLetStatement() -> LetStatement? {
-        /* TODO: figure out how to make this work
-        guard peekTokenIs(token: .identifier("")) else {
+        guard peekTokenIs(token: .identifier) else {
             return nil
         }
-        */
-        guard case .identifier(_) = peekToken else {
-            return nil
-        }
+
         let name = Identifier(token: peekToken, value: peekToken.literal)
         let statement = LetStatement(token: currentToken, name: name)
         nextToken()
-        guard case .assign = peekToken else {
+        guard peekTokenIs(token: .assign) else {
             return nil
         }
-        while({ () -> Bool in
-            switch currentToken {
-            case .newLine, .eof: return false
-            default: return true
-            }
-        })() {
+        
+        while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
             nextToken()
         }
         return statement

@@ -20,21 +20,21 @@ class Lexer {
     // defer { if log { print("Token: \(String(describing: token))") } }
     readChar()
     guard let currentChar else {
-      token = .eof
+      token = .init(tokenType: .eof, literal: "")
       return token
     }
 
     switch currentChar {
     case "=": token = readEqual()
-    case ";": token = .semicolon
-    case "(": token = .openingParen
-    case ")": token = .closingParen
-    case "{": token = .openingBrace
-    case "}": token = .closingBrace
-    case ",": token = .comma
-    case ":": token = .colon
-    case "\n": token = .newLine
-    case "_": token = .underscore
+    case ";": token = .init(tokenType: .semicolon, literal: ";")
+    case "(": token = .init(tokenType: .openingParen, literal: "(")
+    case ")": token = .init(tokenType: .closingParen, literal: ")")
+    case "{": token = .init(tokenType: .openingBrace, literal: "{")
+    case "}": token = .init(tokenType: .closingBrace, literal: "}")
+    case ",": token = .init(tokenType: .comma, literal: ",")
+    case ":": token = .init(tokenType: .colon, literal: ":")
+    case "\n": token = .init(tokenType: .newLine, literal: "\n")
+    case "_": token = .init(tokenType: .underscore, literal: "_")
     case "-": token = readDash()
     case ".": token = readDot()
     case "!": token = readBang()
@@ -45,17 +45,17 @@ class Lexer {
         token = operatorIdentifier
       } else if currentChar.isLetter {
         let identifier = readIdentifier()
-        if let keyword = Token.keywords[identifier] {
-          token = keyword
-        } else if let type = Token.types[identifier] {
-          token = type
+        if Token.keywords[identifier] != nil {
+          token = .init(tokenType: .keyword, literal: identifier)
+        } else if Token.types[identifier] != nil {
+          token = .init(tokenType: .type, literal: identifier)
         } else {
-          token = .identifier(identifier)
+          token = .init(tokenType: .identifier, literal: identifier)
         }
       } else if currentChar.isNumber {
-        token = .integer(readNumber())
+        token = .init(tokenType: .integer, literal: readNumber())
       } else {
-        token = .illegal
+        token = .init(tokenType: .illegal, literal: String(currentChar))
       }
     }
     return token
@@ -67,67 +67,67 @@ class Lexer {
   }
 
   private func readBang() -> Token {
-    guard let nextChar = peekChar() else { return .operator(.bang) }
+    guard let nextChar = peekChar() else { return .init(tokenType: .operator, literal: "!") }
     switch nextChar {
     case " ", "\n":
-      return .operator(.bang)
+      return .init(tokenType: .operator, literal: "!")
     case "=":
       readChar()
-      return .operator(.notEqual)
+        return .init(tokenType: .operator, literal: "!=")
     default:
-      return .illegal
+      return .init(tokenType: .illegal, literal: "!")
     }
   }
   private func readDot() -> Token {
     //.
-    guard let nextChar = peekChar() else { return .illegal }
+    guard let nextChar = peekChar() else { return .init(tokenType: .illegal, literal: ".") }
     switch nextChar {
     case ".":
       readChar()
       //..
-      guard let nextChar = peekChar() else { return .inclusiveRange }
+      guard let nextChar = peekChar() else { return .init(tokenType: .inclusiveRange, literal: "..") }
       switch nextChar {
       case "<":
         readChar()
         // ..<
-        return .nonInclusiveRange
+        return .init(tokenType: .nonInclusiveRange, literal: "..<")
       case " ":
         readChar()
         // ..
-        return .inclusiveRange
+          return .init(tokenType: .inclusiveRange, literal: "..")
       default:
-        return .illegal
+        return .init(tokenType: .illegal, literal: ".")
       }
     default:
-      return .illegal
+      return .init(tokenType: .illegal, literal: ".")
     }
   }
 
   private func readEqual() -> Token {
-    guard let nextChar = peekChar() else { return .illegal }
+    guard let nextChar = peekChar() else { return .init(tokenType: .illegal, literal: "=") }
     switch nextChar {
     case " ":
-      return .assign
+      return .init(tokenType: .assign, literal: "=")
     case "=":
       readChar()
-      return .operator(.equal)
+        return .init(tokenType:.operator, literal: "=")
     default:
-      return .illegal
+      return .init(tokenType: .illegal, literal: "=")
     }
   }
 
   private func readDash() -> Token {
-    guard let nextChar = peekChar() else { return .illegal }
+    guard let nextChar = peekChar() else { return .init(tokenType: .illegal, literal: "-") }
     switch nextChar {
     case " ":
-      return .operator(.minus)
+      return .init(tokenType: .operator, literal: "-")
     case ">":
       readChar()
-      return .keyword(.arrow)
+      return .init(tokenType: .keyword, literal: "->")
     case _ where input[readPosition].isNumber:
-      return .integer("-\(readNumber())")
+      return .init(tokenType: .integer, literal: "-\(readNumber())")
     default:
-      return .illegal
+      return .init(tokenType: .illegal, literal: "-")
     }
   }
 
@@ -170,7 +170,7 @@ extension Lexer: Sequence {
     mutating func next() -> Token? {
       guard !shouldStop else { return nil }
       let token = lexer.nextToken()
-      if token == .eof {
+      if token.tokenType == .eof {
         shouldStop = true
       }
       return token
