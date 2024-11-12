@@ -25,12 +25,14 @@ which will be implemented as we add more expression types.
 struct Program {
     var statements: [Statement] = []
 
+    /*
     func tokenLiteral() -> String {
         if !statements.isEmpty {
             return statements.first!.tokenLiteral()
         }
         return ""
     }
+    */
 
     mutating func addStatement(_ statement: Statement) {
         statements.append(statement)
@@ -49,23 +51,29 @@ protocol Expression: Node {
     func expressionNode()
 }
 
-struct LetStatement: Statement {
+struct LetStatement: Statement, CustomStringConvertible {
     let token: Token
-    var name: Identifier?
+    var name: Identifier
+    /*
     var value: Expression?
+    */
 
     func statementNode() {}
     func tokenLiteral() -> String {
         return token.literal
     }
+
+    var description: String {
+        return "let \(name.value) = ...."
+    }
 }
 
 struct Identifier: Expression {
     let token: Token
+    var value: String
 
     func expressionNode() {}
     func tokenLiteral() -> String {
         return token.literal
     }
 }
-

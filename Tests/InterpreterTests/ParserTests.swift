@@ -20,18 +20,35 @@ struct ParserTests {
     let expectedIdentifiers = ["x", "y", "foobar"]
 
     for index in expectedIdentifiers.indices {
-        let statement = program.statements[index]
-        assert(testLetStatement(statement: statement) == true)
+        guard let statement = program.statements[index] as? LetStatement else {
+            assert(false)
+        }
+        assert(testLetStatement(statement: statement, name: expectedIdentifiers[index]) == true)
     }
   }
 
-  func testLetStatement(statement: Statement) -> Bool {
-    guard let _ = statement as? LetStatement else {
+
+  func testLetStatement(statement: Statement, name: String) -> Bool {
+    guard let letStatement = statement as? LetStatement else {
+      print("Error:".red, "Expected a let statement")
       return false
     }
-    guard statement.tokenLiteral() == "let" else {
+
+    print("Info:".magenta, letStatement)
+    guard letStatement.tokenLiteral() == "let" else {
+      print("Error:".red, "Expected a let statement with token literal 'let'")
       return false
     }
+
+    guard letStatement.name.value == name else {
+      print("Error:".red, "Expected a let statement with name \(name)")
+      return false
+    }
+    guard letStatement.name.tokenLiteral() == name else {
+      print("Error:".red, "Expected a let statement with token literal \(name)")
+      return false
+    }
+
     return true
   }
 }

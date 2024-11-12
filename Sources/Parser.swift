@@ -40,12 +40,25 @@ struct Parser {
         }
     }
 
+    func currentTokenIs(token: Token) -> Bool {
+        return currentToken == token
+    }
+
+    func peekTokenIs(token: Token) -> Bool {
+        return peekToken == token
+    }
+
     mutating func parseLetStatement() -> LetStatement? {
-        var statement = LetStatement(token: currentToken)
+        /* TODO: figure out how to make this work
+        guard peekTokenIs(token: .identifier("")) else {
+            return nil
+        }
+        */
         guard case .identifier(_) = peekToken else {
             return nil
         }
-        statement.name = Identifier(token: currentToken)
+        let name = Identifier(token: peekToken, value: peekToken.literal)
+        let statement = LetStatement(token: currentToken, name: name)
         nextToken()
         guard case .assign = peekToken else {
             return nil
