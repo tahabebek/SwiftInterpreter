@@ -1,11 +1,38 @@
 {
    "version": "0.2.0",
    "configurations": [
-       {
-           "type": "sweetpad-lldb",
-           "request": "launch",
-           "name": "Attach to running App (SweetPad)",
-           "preLaunchTask": "sweetpad: launch",
-       },
-   ],
+    {
+        "type": "sweetpad-lldb",
+        "request": "launch",
+        "name": "Attach to running App (SweetPad)",
+        "preLaunchTask": "sweetpad: launch"
+    },
+    {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Debug Interpreter",
+        "program": "${workspaceFolder:Interpreter}/.build/debug/Interpreter",
+        "preLaunchTask": "swift: Build Debug Interpreter",
+        "cwd": "${workspaceFolder:Interpreter}"
+    },
+    {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Release Interpreter",
+        "program": "${workspaceFolder:Interpreter}/.build/release/Interpreter",
+        "preLaunchTask": "swift: Build Release Interpreter",
+        "cwd": "${workspaceFolder:Interpreter}"
+    },
+    {
+        "type": "lldb",
+        "request": "launch",
+        "name": "Swift Build",
+        "program": "/usr/bin/swift",
+        "args": [
+            "build"
+        ],
+        "cwd": "${workspaceFolder:Interpreter}",
+        "terminal": "integrated"
+    }
+],
 }

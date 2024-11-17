@@ -3,17 +3,11 @@
 	"version": "0.2",
 	"bspVersion": "2.0",
 	"languages": [
-		"c",
-		"cpp",
-		"objective-c",
-		"objective-cpp",
 		"swift"
 	],
 	"argv": [
 		"/opt/homebrew/bin/xcode-build-server"
 	],
-	"workspace": "/Users/tahabebek/Projects/Interpreter/.swiftpm/xcode/package.xcworkspace",
-	"build_root": "/Users/tahabebek",
 	"scheme": "Interpreter",
-	"kind": "xcode"
+	"kind": "swiftpm"
 }
