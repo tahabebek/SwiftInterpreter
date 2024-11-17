@@ -1,5 +1,5 @@
 import Foundation
 
-internal protocol Expression: Node {
+protocol Expression: Node {
   func expressionNode()
 }
