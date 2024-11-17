@@ -3,6 +3,18 @@ struct Parser {
   var currentToken: Token
   var peekToken: Token
   var errors: [String] = []
+    
+  // Operator precedence levels
+  private let precedences: [String: Int] = [
+    "==": 1,
+    "!=": 1,
+    "<": 2,
+    ">": 2,
+    "+": 3,
+    "-": 3,
+    "*": 4,
+    "/": 4
+  ]
 
   init(lexer: Lexer) {
     self.lexer = lexer
@@ -36,11 +48,91 @@ struct Parser {
       case Keyword.return.rawValue:
         return parseReturnStatement()
       default:
-        return nil
+        return parseExpressionStatement()
       }
+    default:
+      return parseExpressionStatement()
+    }
+  }
+
+  private mutating func parseExpressionStatement() -> ExpressionStatement? {
+    let stmt = ExpressionStatement(token: currentToken)
+    stmt.expression = parseExpression(precedence: 0)
+    
+    if peekTokenIs(token: .newLine) {
+      nextToken()
+    }
+    return stmt
+  }
+
+  private mutating func parseExpression(precedence: Int) -> Expression? {
+    // Parse prefix
+    guard var leftExp = parsePrefixExpression() else {
+      errors.append("no prefix parse function for \(currentToken.literal)")
+      return nil
+    }
+    
+    // Parse infix while precedence allows
+    while !peekTokenIs(token: .newLine) && precedence < peekPrecedence() {
+      guard let infix = parseInfixExpression(left: leftExp) else {
+        return leftExp
+      }
+      leftExp = infix
+    }
+    
+    return leftExp
+  }
+
+  private mutating func parsePrefixExpression() -> Expression? {
+    switch currentToken.tokenType {
+    case .identifier:
+      return parseIdentifier()
+    case .integer:
+      return parseIntegerLiteral()
+    case .operator where currentToken.literal == "!":
+      return parsePrefixOperator()
+    case .operator where currentToken.literal == "-":
+      return parsePrefixOperator()
     default:
       return nil
     }
+  }
+
+  private func parseIdentifier() -> Identifier {
+    return Identifier(token: currentToken, value: currentToken.literal)
+  }
+
+  private func parseIntegerLiteral() -> IntegerLiteral {
+    return IntegerLiteral(token: currentToken, 
+                         value: Int(currentToken.literal) ?? 0)
+  }
+
+  private mutating func parsePrefixOperator() -> PrefixExpression? {
+    let expression = PrefixExpression(token: currentToken, 
+                                    operator: currentToken.literal)
+    nextToken()
+    expression.right = parseExpression(precedence: 0)
+    return expression
+  }
+
+  private mutating func parseInfixExpression(left: Expression) -> InfixExpression? {
+    guard currentToken.tokenType == .operator else { return nil }
+    
+    let precedence = currentPrecedence()
+    let expression = InfixExpression(token: currentToken,
+                                   operator: currentToken.literal,
+                                   left: left)
+    nextToken()
+    expression.right = parseExpression(precedence: precedence)
+    return expression
+  }
+
+  private func peekPrecedence() -> Int {
+    return precedences[peekToken.literal] ?? 0
+  }
+
+  private func currentPrecedence() -> Int {
+    return precedences[currentToken.literal] ?? 0
   }
 
   private mutating func parseReturnStatement() -> ReturnStatement? {
