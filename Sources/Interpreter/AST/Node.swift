@@ -1,6 +1,6 @@
 import Foundation
 
-internal protocol Node {
+protocol Node: CustomStringConvertible {
   func tokenLiteral() -> String
 }
 

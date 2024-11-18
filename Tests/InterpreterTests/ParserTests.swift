@@ -48,6 +48,95 @@ struct ParserTests {
       assert(testReturnStatement(statement: returnStatement) == true)
     }
   }
+
+  @Test("Test identifier expression")
+  func testIdentifierExpression() {
+    let input = "foobar"
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+    print("Info:".magenta, program)
+
+    assert(program.statements.count == 1)
+    guard let statement = program.statements[0] as? ExpressionStatement else {
+      assert(false)
+    }
+
+    guard let identifier = statement.expression as? Identifier else {
+      assert(false)
+    }
+
+    assert(identifier.value == "foobar")
+    assert(identifier.tokenLiteral() == "foobar")
+  }
+  
+  @Test("Test integer literal expression")
+  func testIntegerLiteralExpression() {
+    let input = "5"
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+
+    assert(program.statements.count == 1)
+    guard let statement = program.statements[0] as? ExpressionStatement else {
+      assert(false)
+    }
+
+    guard let literal = statement.expression as? IntegerLiteral else {
+      assert(false)
+    }
+
+    assert(literal.value == 5)
+  }
+
+  @Test("Test bang prefix expression")
+  func testBangPrefixExpression() {
+    let input = "!5"
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+
+    assert(program.statements.count == 1)
+    guard let statement = program.statements[0] as? ExpressionStatement else {
+      assert(false)
+    }
+
+    guard let prefixExpression = statement.expression as? PrefixExpression else {
+      assert(false)
+    }
+
+    guard prefixExpression.token.literal == "!" else {
+      assert(false)
+    }
+
+    guard let right = prefixExpression.right as? IntegerLiteral, right.value == 5 else {
+      assert(false)
+    }
+  }
+
+  @Test("Test minus prefix expression")
+  func testMinusPrefixExpression() {
+    let input = "-5"
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+
+    guard let statement = program.statements[0] as? ExpressionStatement else {
+      assert(false)
+    }
+
+    guard let prefixExpression = statement.expression as? PrefixExpression else {
+      assert(false)
+    }
+
+    guard prefixExpression.token.literal == "-" else {
+      assert(false)
+    }
+
+    guard let right = prefixExpression.right as? IntegerLiteral, right.value == 5 else {
+      assert(false)
+    }
+  }
 }
 
 extension ParserTests {

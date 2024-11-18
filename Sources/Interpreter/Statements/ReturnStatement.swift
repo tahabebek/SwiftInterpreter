@@ -8,6 +8,7 @@ struct ReturnStatement: Statement, CustomStringConvertible {
   }
 
   var description: String {
-    return "\(tokenLiteral()) ..."
+    let expressionDescription = returnValue?.description ?? "..."
+    return "\(tokenLiteral()) \(expressionDescription)"
   }
 }

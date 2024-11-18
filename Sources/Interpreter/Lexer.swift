@@ -69,13 +69,11 @@ class Lexer {
   private func readBang() -> Token {
     guard let nextChar = peekChar() else { return .init(tokenType: .operator, literal: "!") }
     switch nextChar {
-    case " ", "\n":
-      return .init(tokenType: .operator, literal: "!")
     case "=":
       readChar()
         return .init(tokenType: .operator, literal: "!=")
     default:
-      return .init(tokenType: .illegal, literal: "!")
+      return .init(tokenType: .operator, literal: "!")
     }
   }
   private func readDot() -> Token {

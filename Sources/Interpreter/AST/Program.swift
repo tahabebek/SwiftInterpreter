@@ -15,4 +15,8 @@ struct Program {
   mutating func addStatement(_ statement: Statement) {
     statements.append(statement)
   }
+
+  var description: String {
+    return statements.map { $0.description }.joined(separator: "\n")
+  }
 }

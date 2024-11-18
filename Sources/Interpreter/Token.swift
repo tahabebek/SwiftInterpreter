@@ -28,8 +28,29 @@ enum TokenType: Equatable {
 }
 
 struct Token: Equatable {
+    typealias ExpressionType = String
     let tokenType: TokenType
     let literal: String
+
+    var expressionType: ExpressionType {
+        switch tokenType {
+        case .integer:
+            return "IntegerLiteral"
+        case .identifier:
+            return "Identifier"
+        case .operator:
+            switch literal {
+            case "!":
+                return "BangPrefixExpression"
+            case "-":
+                return "MinusPrefixExpression"
+            default:
+                return ""
+            }
+        default:
+            return ""
+        }
+    }
 }
 
 enum Keyword: String, CaseIterable {
