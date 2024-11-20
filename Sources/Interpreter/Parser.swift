@@ -13,25 +13,17 @@ struct Parser {
 
     registerPrefix(expressionType: Token(tokenType: .identifier, literal: "").expressionType, function: { parser in parser.parseIdentifier() })
     registerPrefix(expressionType: Token(tokenType: .integer, literal: "").expressionType, function: { parser in parser.parseIntegerLiteral() })
-      registerPrefix(expressionType: Token(tokenType: .operator, literal: "!").expressionType, function: { parser in
-          parser.parsePrefixExpression()
-      })
+    registerPrefix(expressionType: Token(tokenType: .operator, literal: "!").expressionType, function: { parser in parser.parsePrefixExpression() })
     registerPrefix(expressionType: Token(tokenType: .operator, literal: "-").expressionType, function: { parser in parser.parsePrefixExpression() })
-  }
 
-  private func parseIdentifier() -> Identifier {
-    Identifier(token: currentToken, value: currentToken.literal)
-  }
-
-  private func parseIntegerLiteral() -> IntegerLiteral {
-    IntegerLiteral(token: currentToken, value: Int(currentToken.literal)!)
-  }
-
-  private mutating func parsePrefixExpression() -> PrefixExpression {
-    var expression = PrefixExpression(token: currentToken)
-    nextToken()
-    expression.right = parseExpression(precedence: .prefix)
-    return expression
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "+").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .sum) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "-").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .sum) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "*").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .product) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "/").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .product) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "==").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .equals) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "!=").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .equals) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: ">").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .lessGreater) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "<").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .lessGreater) })
   }
 
   mutating func parseProgram() -> Program {
@@ -95,22 +87,6 @@ struct Parser {
     return statement
   }
 
-  private mutating func parseExpressionStatement() -> ExpressionStatement {
-    var statement = ExpressionStatement(token: currentToken)
-    statement.expression = parseExpression(precedence: .lowest)
-    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
-      nextToken()
-    }
-    return statement
-  }
-
-  private mutating func parseExpression(precedence: Precedence) -> Expression {
-    guard let prefixFunction = prefixParseFunctions[currentToken.expressionType] else {
-      fatalError("no prefix parse function for \(currentToken.expressionType)")
-    }
-    return prefixFunction(&self)
-  }
-
   private mutating func expectPeek(token: TokenType) -> Bool {
     if peekTokenIs(token: token) {
       nextToken()
@@ -131,6 +107,57 @@ struct Parser {
   private mutating func peekError(token: TokenType) {
     errors.append("expected next token to be \(token), got \(peekToken.tokenType) instead")
   }
+}
+
+// MARK: - Expressions
+extension Parser {
+  private mutating func parseExpressionStatement() -> ExpressionStatement {
+    var statement = ExpressionStatement(token: currentToken)
+    statement.expression = parseExpression(precedence: .lowest)
+    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
+      nextToken()
+    }
+    return statement
+  }
+
+  private mutating func parseExpression(precedence: Precedence) -> Expression {
+    guard let prefixFunction = prefixParseFunctions[currentToken.expressionType] else {
+      fatalError("no prefix parse function for \(currentToken.expressionType)")
+    }
+    var leftExpression = prefixFunction(&self)
+
+    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof), (peekPrecedence() ?? .lowest) > precedence {
+      guard let infixFunction = infixParseFunctions[peekToken.expressionType] else {
+        return leftExpression
+      }
+      nextToken()
+      leftExpression = infixFunction(&self, leftExpression)
+    }
+    return leftExpression
+  }
+
+  private mutating func parsePrefixExpression() -> PrefixExpression {
+    var expression = PrefixExpression(token: currentToken)
+    nextToken()
+    expression.right = parseExpression(precedence: .prefix)
+    return expression
+  }
+
+  private mutating func parseInfixExpression(precedence: Precedence) -> InfixExpression {
+    var expression = InfixExpression(token: currentToken)
+    nextToken()
+    expression.left = parseExpression(precedence: precedence)
+    expression.right = parseExpression(precedence: currentPrecedence() ?? .lowest)
+    return expression
+  }
+
+  private func parseIdentifier() -> Identifier {
+    Identifier(token: currentToken, value: currentToken.literal)
+  }
+
+  private func parseIntegerLiteral() -> IntegerLiteral {
+    IntegerLiteral(token: currentToken, value: Int(currentToken.literal)!)
+  }
 
   private mutating func registerPrefix(expressionType: Token.ExpressionType, function: @escaping PrefixParseFunction) {
     prefixParseFunctions[expressionType] = function
@@ -139,4 +166,14 @@ struct Parser {
   private mutating func registerInfix(expressionType: Token.ExpressionType, function: @escaping InfixParseFunction) {
     infixParseFunctions[expressionType] = function
   }
+
+  private func peekPrecedence() -> Precedence? {
+    return peekToken.precedence
+  }
+
+  private func currentPrecedence() -> Precedence? {
+    return currentToken.precedence
+  }
 }
+
+

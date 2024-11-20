@@ -29,6 +29,7 @@ enum TokenType: Equatable {
 
 struct Token: Equatable {
     typealias ExpressionType = String
+
     let tokenType: TokenType
     let literal: String
 
@@ -44,11 +45,55 @@ struct Token: Equatable {
                 return "BangPrefixExpression"
             case "-":
                 return "MinusPrefixExpression"
+            case "!=", "==":
+                return "EqualsExpression"
+            case ">", "<":
+                return "ComparisonExpression"
+            case "+", "*", "/":
+                return "ArithmeticExpression"
+            case "(", ")":
+                return "CallExpression"
+            case "[", "]":
+                return "IndexExpression"
+            case "{", "}":
+                return "HashExpression"
+            case ",":
+                return "CommaExpression"
+            case ":":
+                return "HashKeyExpression"
+            case ".":
+                return "HashIndexExpression"
+            case ";":
+                return "SemicolonExpression"
+            case "->":
+                return "ArrowExpression"
+            case "=":
+                return "AssignExpression"
             default:
                 return ""
             }
         default:
             return ""
+        }
+    }
+
+    var precedence: Precedence? {
+        switch tokenType {
+        case .operator:
+            switch literal {
+            case "!=", "==":
+                return .equals
+            case ">", "<":
+                return .lessGreater
+            case "+", "-":
+                return .sum
+            case "*", "/":
+                return .product
+            default:
+                return .lowest
+            }
+        default:
+            return nil
         }
     }
 }

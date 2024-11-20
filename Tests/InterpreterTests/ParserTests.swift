@@ -137,6 +137,29 @@ struct ParserTests {
       assert(false)
     }
   }
+
+  @Test("Test infix expressions")
+  func testInfixExpressions() {
+    let input = "5 + 5"
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+    print("Info:".magenta, program)
+
+    assert(program.statements.count == 1)
+    guard let statement = program.statements[0] as? ExpressionStatement else {
+      assert(false)
+    }
+
+    guard let infixExpression = statement.expression as? InfixExpression else {
+      assert(false)
+    }
+
+    assert(infixExpression.left is IntegerLiteral)
+    assert(infixExpression.operator == "+")
+    assert(infixExpression.right is IntegerLiteral)
+    assert(infixExpression.tokenLiteral() == "+")
+  }
 }
 
 extension ParserTests {

@@ -1,6 +1,6 @@
 import Foundation
 
-struct Program {
+struct Program: CustomStringConvertible {
   var statements: [Statement] = []
 
   /*
