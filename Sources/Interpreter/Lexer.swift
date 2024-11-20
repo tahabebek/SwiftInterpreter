@@ -117,13 +117,12 @@ class Lexer {
   private func readDash() -> Token {
     guard let nextChar = peekChar() else { return .init(tokenType: .illegal, literal: "-") }
     switch nextChar {
-    case " ":
+    case " ",
+        _ where input[readPosition].isNumber:
       return .init(tokenType: .operator, literal: "-")
     case ">":
       readChar()
       return .init(tokenType: .keyword, literal: "->")
-    case _ where input[readPosition].isNumber:
-      return .init(tokenType: .integer, literal: "-\(readNumber())")
     default:
       return .init(tokenType: .illegal, literal: "-")
     }

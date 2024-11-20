@@ -2,6 +2,7 @@ import Foundation
 
 struct PrefixExpression: Expression {
     let token: Token
+    let `operator`: String
     var right: Expression?
 
     func tokenLiteral() -> String {
@@ -11,6 +12,6 @@ struct PrefixExpression: Expression {
     func expressionNode() {}
 
     var description: String {
-        return "(\(token.literal)\(right?.description ?? "")"
+        return "(\(`operator`)\(right?.description ?? "")"
     }
 }

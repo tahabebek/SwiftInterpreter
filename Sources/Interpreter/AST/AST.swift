@@ -5,7 +5,7 @@ Program (Root)
     |
     +-- statements [Statement]
          |
-         +-- LetStatement
+         +-- LetStatement <name>=<expression>
               |
               +-- token: Token (let)
               |
@@ -15,31 +15,31 @@ Program (Root)
               |
               +-- value: Expression (...)
          |
-         +-- ReturnStatement
+         +-- ReturnStatement <return><expression>
               |
               +-- token: Token (return)
               |
               +-- returnValue: Expression? (...)
          |
-         +-- ExpressionStatement
+         +-- ExpressionStatement <expression>
               |
               +-- token: Token (first token of expression)
               |
-              +-- expression: Expression
+              +-- expression: Expression <expression>
                    |
-                   +-- Identifier
+                   +-- Identifier <name>
                    |    |
                    |    +-- token: Token (some_name)
                    |    |
                    |    +-- value: String
                    |
-                   +-- IntegerLiteral
+                   +-- IntegerLiteral <value>
                    |    |
                    |    +-- token: Token (5)
                    |    |
                    |    +-- value: Int
                    |
-                   +-- PrefixExpression
+                   +-- PrefixExpression <prefix_operator><expression>
                    |    |
                    |    +-- token: Token (!, -)
                    |    |
@@ -47,7 +47,7 @@ Program (Root)
                    |    |
                    |    +-- right: Expression
                    |
-                   +-- InfixExpression
+                   +-- InfixExpression <expression><infix_operator><expression>
                         |
                         +-- token: Token (+, -, *, /, etc)
                         |

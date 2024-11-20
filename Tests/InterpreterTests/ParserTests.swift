@@ -129,7 +129,7 @@ struct ParserTests {
       assert(false)
     }
 
-    guard prefixExpression.token.literal == "-" else {
+    guard prefixExpression.operator == "-" else {
       assert(false)
     }
 
@@ -138,8 +138,8 @@ struct ParserTests {
     }
   }
 
-  @Test("Test infix expressions")
-  func testInfixExpressions() {
+  @Test("Test infix expression")
+  func testInfixExpression() {
     let input = "5 + 5"
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
@@ -159,6 +159,40 @@ struct ParserTests {
     assert(infixExpression.operator == "+")
     assert(infixExpression.right is IntegerLiteral)
     assert(infixExpression.tokenLiteral() == "+")
+  }
+
+  @Test("Test infix expressions")
+  func testInfixExpressions() {
+    let tests = [
+      ("-a + b", "((-a) + b)"),
+      ("!-a", "(!(-a))"),
+      ("a + b + c", "((a + b) + c)"),
+      ("a * b * c", "((a * b) * c)"),
+      ("a + b * c", "(a + (b * c))"),
+      ("a * b + c", "((a * b) + c)"),
+      ("3 + 4; -5 * 5", "((3 + 4)((-5) * 5))"),
+      ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+      ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+      ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
+    ]
+
+    for (input, expected) in tests {
+      let lexer = Lexer(input: input)
+      var parser = Parser(lexer: lexer)
+      let program = parser.parseProgram()
+      print("Info:".magenta, program)
+
+      assert(program.statements.count == 1)
+      guard let statement = program.statements[0] as? ExpressionStatement else {
+        assert(false)
+      }
+
+      guard let infixExpression = statement.expression as? InfixExpression else {
+        assert(false)
+      }
+
+      assert(infixExpression.description == expected)
+    }
   }
 }
 

@@ -16,14 +16,14 @@ struct Parser {
     registerPrefix(expressionType: Token(tokenType: .operator, literal: "!").expressionType, function: { parser in parser.parsePrefixExpression() })
     registerPrefix(expressionType: Token(tokenType: .operator, literal: "-").expressionType, function: { parser in parser.parsePrefixExpression() })
 
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "+").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .sum) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "-").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .sum) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "*").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .product) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "/").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .product) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "==").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .equals) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "!=").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .equals) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: ">").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .lessGreater) })
-    registerInfix(expressionType: Token(tokenType: .operator, literal: "<").expressionType, function: { parser, _ in parser.parseInfixExpression(precedence: .lessGreater) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "+").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .sum, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "-").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .sum, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "*").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .product, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "/").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .product, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "==").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .equals, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "!=").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .equals, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: ">").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .lessGreater, left: left) })
+    registerInfix(expressionType: Token(tokenType: .operator, literal: "<").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .lessGreater, left: left) })
   }
 
   mutating func parseProgram() -> Program {
@@ -137,16 +137,16 @@ extension Parser {
   }
 
   private mutating func parsePrefixExpression() -> PrefixExpression {
-    var expression = PrefixExpression(token: currentToken)
+    var expression = PrefixExpression(token: currentToken, operator: currentToken.literal)
     nextToken()
     expression.right = parseExpression(precedence: .prefix)
     return expression
   }
 
-  private mutating func parseInfixExpression(precedence: Precedence) -> InfixExpression {
-    var expression = InfixExpression(token: currentToken)
+  private mutating func parseInfixExpression(precedence: Precedence, left: Expression) -> InfixExpression {
+    var expression = InfixExpression(token: currentToken, operator: currentToken.literal)
+    expression.left = left
     nextToken()
-    expression.left = parseExpression(precedence: precedence)
     expression.right = parseExpression(precedence: currentPrecedence() ?? .lowest)
     return expression
   }
