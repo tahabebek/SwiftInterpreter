@@ -12,6 +12,6 @@ struct PrefixExpression: Expression {
     func expressionNode() {}
 
     var description: String {
-        return "(\(`operator`)\(right?.description ?? "")"
+        return "(\(`operator`)\(right?.description ?? ""))"
     }
 }

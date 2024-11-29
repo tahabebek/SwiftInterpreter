@@ -108,7 +108,7 @@ class Lexer {
       return .init(tokenType: .assign, literal: "=")
     case "=":
       readChar()
-        return .init(tokenType:.operator, literal: "=")
+        return .init(tokenType:.operator, literal: "==")
     default:
       return .init(tokenType: .illegal, literal: "=")
     }
@@ -117,14 +117,11 @@ class Lexer {
   private func readDash() -> Token {
     guard let nextChar = peekChar() else { return .init(tokenType: .illegal, literal: "-") }
     switch nextChar {
-    case " ",
-        _ where input[readPosition].isNumber:
-      return .init(tokenType: .operator, literal: "-")
     case ">":
       readChar()
       return .init(tokenType: .keyword, literal: "->")
     default:
-      return .init(tokenType: .illegal, literal: "-")
+        return .init(tokenType: .operator, literal: "-")
     }
   }
 

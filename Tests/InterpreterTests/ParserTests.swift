@@ -4,8 +4,27 @@ import Testing
 
 @Suite
 struct ParserTests {
-  @Test("Test let statement")
-  func testLetStatements() {
+    
+  @Test(.tags(.statement))
+  func letStatement() throws {
+    let input = "let x = 5"
+
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+    #expect(program.statements.count == 1)
+
+    let expectedIdentifiers = ["x"]
+    #expect(program.description == input)
+
+    for index in expectedIdentifiers.indices {
+        let statement = try #require(program.statements[index] as? LetStatement)
+        #expect(testLetStatement(statement: statement, name: expectedIdentifiers[index]) == true)
+    }
+  }
+    
+  @Test(.tags(.statement))
+  func letStatements() throws {
     let input = """
     let x = 5
     let y = 10
@@ -15,20 +34,17 @@ struct ParserTests {
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
-    assert(program.statements.count == 3)
+    #expect(program.statements.count == 3)
 
     let expectedIdentifiers = ["x", "y", "foobar"]
-
     for index in expectedIdentifiers.indices {
-        guard let statement = program.statements[index] as? LetStatement else {
-            assert(false)
-        }
-        assert(testLetStatement(statement: statement, name: expectedIdentifiers[index]) == true)
+        let statement = try #require(program.statements[index] as? LetStatement)
+        #expect(testLetStatement(statement: statement, name: expectedIdentifiers[index]) == true)
     }
   }
 
-  @Test("Test return statement")
-  func testReturnStatements() {
+  @Test(.tags(.statement))
+  func returnStatements() throws {
     let input = """
     return 5
     return 10
@@ -38,162 +54,148 @@ struct ParserTests {
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
-
-    assert(program.statements.count == 3)
+    #expect(program.statements.count == 3)
 
     for statement in program.statements {
-      guard let returnStatement = statement as? ReturnStatement else {
-        assert(false)
-      }
-      assert(testReturnStatement(statement: returnStatement) == true)
+      let returnStatement = try #require(statement as? ReturnStatement)
+      #expect(testReturnStatement(statement: returnStatement) == true)
     }
   }
 
-  @Test("Test identifier expression")
-  func testIdentifierExpression() {
+  @Test(.tags(.expression))
+  func booleanLiteralExpression() throws {
+    let input = "true"
+    let lexer = Lexer(input: input)
+    var parser = Parser(lexer: lexer)
+    let program = parser.parseProgram()
+    print("Info:".magenta, program)
+    #expect(program.statements.count == 1)
+
+    let statement = try #require(program.statements[0] as? ExpressionStatement)
+    let booleanLiteral = try #require(statement.expression as? BooleanLiteral)
+    #expect(booleanLiteral.value == true)
+    #expect(booleanLiteral.tokenLiteral() == "true")
+  }
+
+  @Test(.tags(.expression))
+  func identifierExpression() throws {
     let input = "foobar"
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
-    print("Info:".magenta, program)
+    #expect(program.statements.count == 1)
 
-    assert(program.statements.count == 1)
-    guard let statement = program.statements[0] as? ExpressionStatement else {
-      assert(false)
-    }
-
-    guard let identifier = statement.expression as? Identifier else {
-      assert(false)
-    }
-
-    assert(identifier.value == "foobar")
-    assert(identifier.tokenLiteral() == "foobar")
+    let statement = try #require(program.statements[0] as? ExpressionStatement)
+    let identifier = try #require(statement.expression as? Identifier)
+    #expect(identifier.value == "foobar")
+    #expect(identifier.tokenLiteral() == "foobar")
   }
   
-  @Test("Test integer literal expression")
-  func testIntegerLiteralExpression() {
+  @Test(.tags(.expression))
+  func integerLiteralExpression() throws {
     let input = "5"
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
+    #expect(program.statements.count == 1)
 
-    assert(program.statements.count == 1)
-    guard let statement = program.statements[0] as? ExpressionStatement else {
-      assert(false)
-    }
-
-    guard let literal = statement.expression as? IntegerLiteral else {
-      assert(false)
-    }
-
-    assert(literal.value == 5)
+    let statement = try #require(program.statements[0] as? ExpressionStatement)
+    let literal = try #require(statement.expression as? IntegerLiteral)
+    #expect(literal.value == 5)
   }
 
-  @Test("Test bang prefix expression")
-  func testBangPrefixExpression() {
+  @Test(.tags(.expression))
+  func bangPrefixExpression() throws {
     let input = "!5"
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
+    #expect(program.statements.count == 1)
 
-    assert(program.statements.count == 1)
-    guard let statement = program.statements[0] as? ExpressionStatement else {
-      assert(false)
-    }
+    let statement = try #require(program.statements[0] as? ExpressionStatement)
+    let prefixExpression = try #require(statement.expression as? PrefixExpression)
+    #expect(prefixExpression.token.literal == "!")
 
-    guard let prefixExpression = statement.expression as? PrefixExpression else {
-      assert(false)
-    }
-
-    guard prefixExpression.token.literal == "!" else {
-      assert(false)
-    }
-
-    guard let right = prefixExpression.right as? IntegerLiteral, right.value == 5 else {
-      assert(false)
-    }
+    let right = try #require(prefixExpression.right as? IntegerLiteral)
+    #expect(right.value == 5)
   }
 
-  @Test("Test minus prefix expression")
-  func testMinusPrefixExpression() {
+  @Test(.tags(.expression))
+  func minusPrefixExpression() throws {
     let input = "-5"
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
+    #expect(program.statements.count == 1)
 
-    guard let statement = program.statements[0] as? ExpressionStatement else {
-      assert(false)
-    }
+    let statement = try #require(program.statements[0] as? ExpressionStatement)
+    let prefixExpression = try #require(statement.expression as? PrefixExpression)
+    #expect(prefixExpression.operator == "-")
 
-    guard let prefixExpression = statement.expression as? PrefixExpression else {
-      assert(false)
-    }
-
-    guard prefixExpression.operator == "-" else {
-      assert(false)
-    }
-
-    guard let right = prefixExpression.right as? IntegerLiteral, right.value == 5 else {
-      assert(false)
-    }
+    let right = try #require(prefixExpression.right as? IntegerLiteral)
+    #expect(right.value == 5)
   }
 
-  @Test("Test infix expression")
-  func testInfixExpression() {
+  @Test(.tags(.expression))
+  func infixExpression() throws {
     let input = "5 + 5"
     let lexer = Lexer(input: input)
     var parser = Parser(lexer: lexer)
     let program = parser.parseProgram()
-    print("Info:".magenta, program)
+    #expect(program.statements.count == 1)
 
-    assert(program.statements.count == 1)
-    guard let statement = program.statements[0] as? ExpressionStatement else {
-      assert(false)
-    }
-
-    guard let infixExpression = statement.expression as? InfixExpression else {
-      assert(false)
-    }
-
-    assert(infixExpression.left is IntegerLiteral)
-    assert(infixExpression.operator == "+")
-    assert(infixExpression.right is IntegerLiteral)
-    assert(infixExpression.tokenLiteral() == "+")
+    let statement = try #require(program.statements[0] as? ExpressionStatement)
+    let infixExpression = try #require(statement.expression as? InfixExpression)
+    #expect(infixExpression.left is IntegerLiteral)
+    #expect(infixExpression.operator == "+")
+    #expect(infixExpression.right is IntegerLiteral)
+    #expect(infixExpression.tokenLiteral() == "+")
   }
 
-  @Test("Test infix expressions")
-  func testInfixExpressions() {
-    let tests = [
-      ("-a + b", "((-a) + b)"),
-      ("!-a", "(!(-a))"),
-      ("a + b + c", "((a + b) + c)"),
-      ("a * b * c", "((a * b) * c)"),
-      ("a + b * c", "(a + (b * c))"),
-      ("a * b + c", "((a * b) + c)"),
-      ("3 + 4; -5 * 5", "((3 + 4)((-5) * 5))"),
-      ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
-      ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
-      ("3 + 4 * 5 == 3 * 1 + 4 * 5", "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))"),
-    ]
-
-    for (input, expected) in tests {
+    @Test(.tags(.expression), arguments: zip([
+      "-a * b",
+      "-a + b",
+      "!-a",
+      "a + b + c",
+      "a * b * c",
+      "a + b * c",
+      "a * b + c",
+      "5 > 4 == 3 < 4",
+      "5 < 4 != 3 > 4",
+      "3 + 4 * 5 == 3 * 1 + 4 * 5",
+      "true",
+      "false",
+      "3 > 5 == false",
+      "3 < 5 == true",
+      "1 + (2 + 3) + 4", "((1 + (2 + 3)) + 4)"
+    ],[
+      "((-a) * b)",
+      "((-a) + b)",
+      "(!(-a))",
+      "((a + b) + c)",
+      "((a * b) * c)",
+      "(a + (b * c))",
+      "((a * b) + c)",
+      "((5 > 4) == (3 < 4))",
+      "((5 < 4) != (3 > 4))",
+      "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+      "true",
+      "false",
+      "((3 > 5) == false)",
+      "((3 < 5) == true)",
+      "((1 + (2 + 3)) + 4)"
+    ]))
+    func multipleInfixExpressions(input: String, expected: String) throws {
       let lexer = Lexer(input: input)
       var parser = Parser(lexer: lexer)
       let program = parser.parseProgram()
       print("Info:".magenta, program)
+      #expect(program.statements.count == 1)
 
-      assert(program.statements.count == 1)
-      guard let statement = program.statements[0] as? ExpressionStatement else {
-        assert(false)
-      }
-
-      guard let infixExpression = statement.expression as? InfixExpression else {
-        assert(false)
-      }
-
-      assert(infixExpression.description == expected)
+      let statement = try #require(program.statements[0] as? ExpressionStatement)
+      let expression = try #require(statement.expression)
+      #expect(expression.description == expected)
     }
-  }
 }
 
 extension ParserTests {

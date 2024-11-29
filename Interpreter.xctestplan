@@ -1,0 +1,28 @@
+{
+  "configurations" : [
+    {
+      "id" : "A72E499F-1A3A-4990-9B05-B32FBCC7151A",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "targetForVariableExpansion" : {
+      "containerPath" : "container:",
+      "identifier" : "Interpreter",
+      "name" : "Interpreter"
+    }
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:",
+        "identifier" : "InterpreterTests",
+        "name" : "InterpreterTests"
+      }
+    }
+  ],
+  "version" : 1
+}

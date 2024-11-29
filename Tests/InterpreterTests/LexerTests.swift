@@ -4,8 +4,8 @@ import Testing
 
 @Suite
 struct LexerTests {
-  @Test("Lexer with for")
-  func nextTokenWithFor() {
+  @Test(.tags(.lexer))
+  func lexer() {
     let input = """
       struct BuildCommand: ParsableCommand {
         func main() -> Int {
@@ -80,7 +80,7 @@ struct LexerTests {
       .init(tokenType: .integer, literal: "5"),
       .init(tokenType: .comma, literal: ","),
       .init(tokenType: .identifier, literal: "y"),
-      .init(tokenType: .operator, literal: "="),
+      .init(tokenType: .operator, literal: "=="),
       .init(tokenType: .integer, literal: "0"),
       .init(tokenType: .openingBrace, literal: "{"),
       .init(tokenType: .newLine, literal: "\n"),

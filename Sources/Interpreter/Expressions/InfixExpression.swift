@@ -13,6 +13,6 @@ struct InfixExpression: Expression {
     func expressionNode() {}
 
     var description: String {
-        return "(\(token.literal)\(left?.description ?? "") \(`operator` ?? "") \(right?.description ?? ""))"
+        return "(\(left?.description ?? "") \(`operator` ?? "") \(right?.description ?? ""))"
     }
 }

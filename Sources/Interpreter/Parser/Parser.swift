@@ -1,5 +1,6 @@
 struct Parser {
   let lexer: Lexer
+  var tracing: ParserTracing = ParserTracing()
   var currentToken: Token
   var peekToken: Token
   var errors: [String] = []
@@ -24,6 +25,8 @@ struct Parser {
     registerInfix(expressionType: Token(tokenType: .operator, literal: "!=").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .equals, left: left) })
     registerInfix(expressionType: Token(tokenType: .operator, literal: ">").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .lessGreater, left: left) })
     registerInfix(expressionType: Token(tokenType: .operator, literal: "<").expressionType, function: { parser, left in parser.parseInfixExpression(precedence: .lessGreater, left: left) })
+    registerPrefix(expressionType: Token(tokenType: .keyword, literal: "true").expressionType, function: { parser in parser.parseBooleanLiteral() })
+    registerPrefix(expressionType: Token(tokenType: .keyword, literal: "false").expressionType, function: { parser in parser.parseBooleanLiteral() })
   }
 
   mutating func parseProgram() -> Program {
@@ -52,7 +55,7 @@ struct Parser {
       case Keyword.return.rawValue:
         return parseReturnStatement()
       default:
-        return nil
+        return parseExpressionStatement()
       }
     default:
       return parseExpressionStatement()
@@ -60,12 +63,15 @@ struct Parser {
   }
 
   private mutating func parseReturnStatement() -> ReturnStatement? {
-    let statement = ReturnStatement(token: currentToken)
+    var statement = ReturnStatement(token: currentToken)
     nextToken()
 
-    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
+    if !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
       nextToken()
+      statement.returnValue = parseExpression(precedence: .lowest)
     }
+    nextToken()
+    
     return statement
   }
 
@@ -80,10 +86,13 @@ struct Parser {
     guard expectPeek(token: .assign) else {
       return nil
     }
-
-    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
+      
+    if !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
       nextToken()
+      statement.value = parseExpression(precedence: .lowest)
     }
+    nextToken()
+
     return statement
   }
 
@@ -112,6 +121,8 @@ struct Parser {
 // MARK: - Expressions
 extension Parser {
   private mutating func parseExpressionStatement() -> ExpressionStatement {
+    tracing.trace(msg: "parseExpressionStatement")
+    defer { tracing.untrace(msg: "parseExpressionStatement") }
     var statement = ExpressionStatement(token: currentToken)
     statement.expression = parseExpression(precedence: .lowest)
     while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof) {
@@ -121,12 +132,14 @@ extension Parser {
   }
 
   private mutating func parseExpression(precedence: Precedence) -> Expression {
+    tracing.trace(msg: "parseExpression")
+    defer { tracing.untrace(msg: "parseExpression") }
     guard let prefixFunction = prefixParseFunctions[currentToken.expressionType] else {
       fatalError("no prefix parse function for \(currentToken.expressionType)")
     }
     var leftExpression = prefixFunction(&self)
 
-    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof), (peekPrecedence() ?? .lowest) > precedence {
+    while !peekTokenIs(token: .newLine), !peekTokenIs(token: .eof), precedence < (peekPrecedence() ?? .lowest) {
       guard let infixFunction = infixParseFunctions[peekToken.expressionType] else {
         return leftExpression
       }
@@ -137,6 +150,8 @@ extension Parser {
   }
 
   private mutating func parsePrefixExpression() -> PrefixExpression {
+    tracing.trace(msg: "parsePrefixExpression")
+    defer { tracing.untrace(msg: "parsePrefixExpression") }
     var expression = PrefixExpression(token: currentToken, operator: currentToken.literal)
     nextToken()
     expression.right = parseExpression(precedence: .prefix)
@@ -144,10 +159,12 @@ extension Parser {
   }
 
   private mutating func parseInfixExpression(precedence: Precedence, left: Expression) -> InfixExpression {
-    var expression = InfixExpression(token: currentToken, operator: currentToken.literal)
-    expression.left = left
+    tracing.trace(msg: "parseInfixExpression")
+    defer { tracing.untrace(msg: "parseInfixExpression") }
+    var expression = InfixExpression(token: currentToken, left: left, operator: currentToken.literal)
+    let precedence = currentPrecedence() ?? .lowest
     nextToken()
-    expression.right = parseExpression(precedence: currentPrecedence() ?? .lowest)
+    expression.right = parseExpression(precedence: precedence)
     return expression
   }
 
@@ -155,8 +172,16 @@ extension Parser {
     Identifier(token: currentToken, value: currentToken.literal)
   }
 
-  private func parseIntegerLiteral() -> IntegerLiteral {
-    IntegerLiteral(token: currentToken, value: Int(currentToken.literal)!)
+  private mutating func parseIntegerLiteral() -> IntegerLiteral {
+    tracing.trace(msg: "parseIntegerLiteral")
+    defer { tracing.untrace(msg: "parseIntegerLiteral") }
+    return IntegerLiteral(token: currentToken, value: Int(currentToken.literal)!)
+  }
+
+  private mutating func parseBooleanLiteral() -> BooleanLiteral {
+    tracing.trace(msg: "parseBooleanLiteral")
+    defer { tracing.untrace(msg: "parseBooleanLiteral") }
+    return BooleanLiteral(token: currentToken, value: currentToken.literal == "true")
   }
 
   private mutating func registerPrefix(expressionType: Token.ExpressionType, function: @escaping PrefixParseFunction) {
